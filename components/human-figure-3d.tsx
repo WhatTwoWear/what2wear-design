@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
 
 interface HumanFigure3DProps {
   selectedItemType: string | null
@@ -31,74 +32,45 @@ export function HumanFigure3D({ selectedItemType, onItemClick }: HumanFigure3DPr
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Animation function to rotate only the figure
-    const animate = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Increment rotation
-      rotationRef.current += 0.01
+    // Draw a simple human figure silhouette
+    ctx.save()
 
-      // Save context state
-      ctx.save()
+    // Move to center of canvas
+    ctx.translate(canvas.width / 2, canvas.height / 2)
 
-      // Move to center of canvas
-      ctx.translate(canvas.width / 2, canvas.height / 2)
+    // Move back to draw the figure centered
+    ctx.translate(-40, -150)
 
-      // Rotate
-      ctx.rotate(rotationRef.current)
+    // Head - different color based on selected item
+    ctx.fillStyle = selectedItemType === "accessory" ? "#d1d5db" : "#e5e7eb"
+    ctx.beginPath()
+    ctx.arc(40, 30, 30, 0, Math.PI * 2)
+    ctx.fill()
 
-      // Draw a simple human figure silhouette
-      ctx.fillStyle = "#e5e7eb"
+    // Body - different color based on selected item
+    ctx.fillStyle = selectedItemType === "top" ? "#d1d5db" : "#e5e7eb"
+    ctx.fillRect(0, 60, 80, 100)
 
-      // Move back to draw the figure centered
-      ctx.translate(-40, -150)
+    // Legs - different color based on selected item
+    ctx.fillStyle = selectedItemType === "bottom" ? "#d1d5db" : "#e5e7eb"
+    ctx.fillRect(0, 160, 30, 120)
+    ctx.fillRect(50, 160, 30, 120)
 
-      // Head
-      ctx.beginPath()
-      ctx.arc(40, 30, 30, 0, Math.PI * 2)
-      ctx.fill()
+    // Feet - different color based on selected item
+    ctx.fillStyle = selectedItemType === "shoes" ? "#d1d5db" : "#e5e7eb"
+    ctx.fillRect(-10, 280, 40, 15)
+    ctx.fillRect(50, 280, 40, 15)
 
-      // Body - different color based on selected item
-      if (selectedItemType === "top") {
-        ctx.fillStyle = "#d1d5db"
-      } else {
-        ctx.fillStyle = "#e5e7eb"
-      }
-      ctx.fillRect(0, 60, 80, 100)
+    // Arms
+    ctx.fillStyle = "#e5e7eb"
+    ctx.fillRect(-30, 70, 30, 80)
+    ctx.fillRect(80, 70, 30, 80)
 
-      // Legs - different color based on selected item
-      if (selectedItemType === "bottom") {
-        ctx.fillStyle = "#d1d5db"
-      } else {
-        ctx.fillStyle = "#e5e7eb"
-      }
-      ctx.fillRect(0, 160, 30, 120)
-      ctx.fillRect(50, 160, 30, 120)
-
-      // Feet - different color based on selected item
-      if (selectedItemType === "shoes") {
-        ctx.fillStyle = "#d1d5db"
-      } else {
-        ctx.fillStyle = "#e5e7eb"
-      }
-      ctx.fillRect(-10, 280, 40, 15)
-      ctx.fillRect(50, 280, 40, 15)
-
-      // Arms
-      ctx.fillStyle = "#e5e7eb"
-      ctx.fillRect(-30, 70, 30, 80)
-      ctx.fillRect(80, 70, 30, 80)
-
-      // Restore context state
-      ctx.restore()
-
-      // Request next frame
-      animationRef.current = requestAnimationFrame(animate)
-    }
-
-    // Start animation
-    animate()
+    // Restore context state
+    ctx.restore()
 
     // Add click handlers for different body parts
     const handleClick = (e: MouseEvent) => {
@@ -114,38 +86,24 @@ export function HumanFigure3D({ selectedItemType, onItemClick }: HumanFigure3DPr
       const dx = x - centerX
       const dy = y - centerY
 
-      // Calculate angle from center
-      const angle = Math.atan2(dy, dx) - rotationRef.current
-
       // Calculate distance from center
       const distance = Math.sqrt(dx * dx + dy * dy)
 
-      // Check if click is within figure radius
-      if (distance < 100) {
-        // Determine which part was clicked based on angle and distance
-        if (distance < 40) {
-          // Top/body area
-          onItemClick("top")
-        } else if (angle > -Math.PI / 4 && angle < Math.PI / 4) {
-          // Right side (arms)
-          onItemClick("top")
-        } else if (angle > Math.PI / 4 && angle < (3 * Math.PI) / 4) {
-          // Bottom (legs/shoes)
-          if (distance > 80) {
-            onItemClick("shoes")
-          } else {
-            onItemClick("bottom")
-          }
-        } else if (
-          (angle > (3 * Math.PI) / 4 && angle <= Math.PI) ||
-          (angle >= -Math.PI && angle < (-3 * Math.PI) / 4)
-        ) {
-          // Left side (arms)
-          onItemClick("top")
-        } else {
-          // Top (head/shoulders)
-          onItemClick("top")
-        }
+      // Determine which part was clicked based on y position
+      const relativeY = y - rect.top
+
+      if (relativeY < canvas.height * 0.2) {
+        // Head/accessories area
+        onItemClick("accessory")
+      } else if (relativeY < canvas.height * 0.4) {
+        // Top/body area
+        onItemClick("top")
+      } else if (relativeY < canvas.height * 0.7) {
+        // Bottom/legs area
+        onItemClick("bottom")
+      } else {
+        // Shoes/feet area
+        onItemClick("shoes")
       }
     }
 
@@ -153,9 +111,6 @@ export function HumanFigure3D({ selectedItemType, onItemClick }: HumanFigure3DPr
 
     // Cleanup function
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
       canvas.removeEventListener("click", handleClick)
     }
   }, [selectedItemType, onItemClick])
@@ -166,8 +121,44 @@ export function HumanFigure3D({ selectedItemType, onItemClick }: HumanFigure3DPr
       className="w-full h-full flex items-center justify-center relative"
       style={{ cursor: "pointer" }}
     >
+      {/* Clickable zones with labels */}
+      <div className="absolute inset-0 flex flex-col pointer-events-none">
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ opacity: selectedItemType === "accessory" ? 1 : 0.5 }}
+            className="text-xs text-gray-500 bg-white/80 px-2 py-1 rounded"
+          >
+            Accessories
+          </motion.div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ opacity: selectedItemType === "top" ? 1 : 0.5 }}
+            className="text-xs text-gray-500 bg-white/80 px-2 py-1 rounded"
+          >
+            Tops
+          </motion.div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ opacity: selectedItemType === "bottom" ? 1 : 0.5 }}
+            className="text-xs text-gray-500 bg-white/80 px-2 py-1 rounded"
+          >
+            Bottoms
+          </motion.div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            animate={{ opacity: selectedItemType === "shoes" ? 1 : 0.5 }}
+            className="text-xs text-gray-500 bg-white/80 px-2 py-1 rounded"
+          >
+            Shoes
+          </motion.div>
+        </div>
+      </div>
+
       <div className="absolute inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
-        {!selectedItemType && <p className="text-sm">Click on a body part to select an item</p>}
+        {!selectedItemType && <p className="text-sm">Tap on a body part to select an item</p>}
       </div>
     </div>
   )

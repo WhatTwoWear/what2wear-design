@@ -11,17 +11,29 @@ const translations = {
     "nav.generator": "Generator",
     "nav.calendar": "Calendar",
     "nav.likes": "Likes",
+    "nav.account": "Account",
 
     // Home
     "home.welcome": "Welcome to What2Wear",
     "home.subtitle": "Your personal outfit generator and wardrobe manager",
     "home.getStarted": "Get Started",
+    "home.savedOutfits": "Saved Outfits",
+    "home.unsavedOutfits": "Recent Outfits",
+    "home.noSavedOutfits": "No saved outfits yet",
+    "home.noUnsavedOutfits": "No recent outfits",
 
     // Wardrobe
     "wardrobe.title": "My Wardrobe",
     "wardrobe.addItem": "Add Item",
     "wardrobe.noItems": "No items in your wardrobe yet",
     "wardrobe.addFirst": "Add your first item",
+    "wardrobe.uploadImage": "Upload Image",
+    "wardrobe.detectColor": "Detect Color",
+    "wardrobe.style": "Style",
+    "wardrobe.styleCasual": "Casual",
+    "wardrobe.styleSport": "Sport",
+    "wardrobe.styleBusiness": "Business",
+    "wardrobe.styleFormal": "Formal",
 
     // Item form
     "item.name": "Name",
@@ -47,12 +59,27 @@ const translations = {
     "generator.exit": "Exit",
     "generator.tryAgain": "Try Again",
     "generator.placeholder": "E.g., Casual outfit for a coffee date",
+    "generator.thinking": "Thinking...",
+    "generator.suggestion": "Based on your request, I suggest:",
+    "generator.nameOutfit": "Name your outfit",
+    "generator.saveOutfit": "Save Outfit",
 
     // Calendar
     "calendar.title": "My Calendar",
     "calendar.addEvent": "Add Event",
     "calendar.noEvents": "No events scheduled",
     "calendar.today": "Today",
+    "calendar.monthView": "Month View",
+    "calendar.weekView": "Week View",
+    "calendar.eventType": "Event Type",
+    "calendar.eventParty": "Party",
+    "calendar.eventSport": "Sport",
+    "calendar.eventBusiness": "Business",
+    "calendar.eventTravel": "Travel",
+    "calendar.eventCasual": "Casual",
+    "calendar.eventFormal": "Formal",
+    "calendar.eventDate": "Date",
+    "calendar.eventWedding": "Wedding",
 
     // Event form
     "event.name": "Event Name",
@@ -69,6 +96,9 @@ const translations = {
     "likes.title": "Saved Outfits",
     "likes.noOutfits": "No saved outfits yet",
     "likes.assignToEvent": "Assign to Event",
+    "likes.rename": "Rename",
+    "likes.assign": "Assign to Event",
+    "likes.promote": "Add to Top 3",
 
     // Account
     "account.title": "My Account",
@@ -82,6 +112,17 @@ const translations = {
     "account.english": "English",
     "account.german": "Deutsch",
     "account.changePicture": "Change Picture",
+    "account.login": "Login",
+    "account.logout": "Logout",
+    "account.email": "Email",
+    "account.password": "Password",
+    "account.signIn": "Sign In",
+    "account.signUp": "Sign Up",
+    "account.forgotPassword": "Forgot Password?",
+    "account.magicLink": "Send Magic Link",
+    "account.notLoggedIn": "Sign in to access your wardrobe",
+    "account.editUsername": "Edit Username",
+    "account.mostUsedColor": "Most Used Color",
 
     // Common
     "common.save": "Save",
@@ -89,6 +130,11 @@ const translations = {
     "common.delete": "Delete",
     "common.edit": "Edit",
     "common.loading": "Loading...",
+
+    // Onboarding
+    "onboarding.welcome": "Welcome to What2Wear",
+    "onboarding.subtitle": "Your personal outfit generator and wardrobe manager",
+    "onboarding.swipeToStart": "Swipe to Start",
   },
   de: {
     // Navigation
@@ -97,17 +143,29 @@ const translations = {
     "nav.generator": "Generator",
     "nav.calendar": "Kalender",
     "nav.likes": "Favoriten",
+    "nav.account": "Konto",
 
     // Home
     "home.welcome": "Willkommen bei What2Wear",
     "home.subtitle": "Dein persönlicher Outfit-Generator und Kleiderschrank-Manager",
     "home.getStarted": "Loslegen",
+    "home.savedOutfits": "Gespeicherte Outfits",
+    "home.unsavedOutfits": "Aktuelle Outfits",
+    "home.noSavedOutfits": "Noch keine gespeicherten Outfits",
+    "home.noUnsavedOutfits": "Keine aktuellen Outfits",
 
     // Wardrobe
     "wardrobe.title": "Mein Kleiderschrank",
     "wardrobe.addItem": "Kleidungsstück hinzufügen",
     "wardrobe.noItems": "Noch keine Kleidungsstücke im Kleiderschrank",
     "wardrobe.addFirst": "Füge dein erstes Kleidungsstück hinzu",
+    "wardrobe.uploadImage": "Bild hochladen",
+    "wardrobe.detectColor": "Farbe erkennen",
+    "wardrobe.style": "Stil",
+    "wardrobe.styleCasual": "Casual",
+    "wardrobe.styleSport": "Sport",
+    "wardrobe.styleBusiness": "Business",
+    "wardrobe.styleFormal": "Formal",
 
     // Item form
     "item.name": "Name",
@@ -133,12 +191,27 @@ const translations = {
     "generator.exit": "Beenden",
     "generator.tryAgain": "Nochmal versuchen",
     "generator.placeholder": "z.B. Lässiges Outfit für ein Kaffeedate",
+    "generator.thinking": "Überlege...",
+    "generator.suggestion": "Basierend auf deiner Anfrage schlage ich vor:",
+    "generator.nameOutfit": "Benenne dein Outfit",
+    "generator.saveOutfit": "Outfit speichern",
 
     // Calendar
     "calendar.title": "Mein Kalender",
     "calendar.addEvent": "Termin hinzufügen",
     "calendar.noEvents": "Keine Termine geplant",
     "calendar.today": "Heute",
+    "calendar.monthView": "Monatsansicht",
+    "calendar.weekView": "Wochenansicht",
+    "calendar.eventType": "Ereignistyp",
+    "calendar.eventParty": "Party",
+    "calendar.eventSport": "Sport",
+    "calendar.eventBusiness": "Business",
+    "calendar.eventTravel": "Reise",
+    "calendar.eventCasual": "Casual",
+    "calendar.eventFormal": "Formal",
+    "calendar.eventDate": "Date",
+    "calendar.eventWedding": "Hochzeit",
 
     // Event form
     "event.name": "Terminname",
@@ -155,6 +228,9 @@ const translations = {
     "likes.title": "Gespeicherte Outfits",
     "likes.noOutfits": "Noch keine gespeicherten Outfits",
     "likes.assignToEvent": "Zu Termin hinzufügen",
+    "likes.rename": "Umbenennen",
+    "likes.assign": "Zu Ereignis hinzufügen",
+    "likes.promote": "Zu Top 3 hinzufügen",
 
     // Account
     "account.title": "Mein Konto",
@@ -168,6 +244,17 @@ const translations = {
     "account.english": "English",
     "account.german": "Deutsch",
     "account.changePicture": "Bild ändern",
+    "account.login": "Anmelden",
+    "account.logout": "Abmelden",
+    "account.email": "E-Mail",
+    "account.password": "Passwort",
+    "account.signIn": "Einloggen",
+    "account.signUp": "Registrieren",
+    "account.forgotPassword": "Passwort vergessen?",
+    "account.magicLink": "Magic Link senden",
+    "account.notLoggedIn": "Melde dich an, um auf deinen Kleiderschrank zuzugreifen",
+    "account.editUsername": "Benutzernamen bearbeiten",
+    "account.mostUsedColor": "Meistgenutzte Farbe",
 
     // Common
     "common.save": "Speichern",
@@ -175,6 +262,11 @@ const translations = {
     "common.delete": "Löschen",
     "common.edit": "Bearbeiten",
     "common.loading": "Lädt...",
+
+    // Onboarding
+    "onboarding.welcome": "Willkommen bei What2Wear",
+    "onboarding.subtitle": "Dein persönlicher Outfit-Generator und Kleiderschrank-Manager",
+    "onboarding.swipeToStart": "Wische zum Starten",
   },
 }
 

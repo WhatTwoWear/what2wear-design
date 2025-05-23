@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { PlusCircle, Search, X } from "lucide-react"
+import { PlusCircle, Search, X, Upload, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,10 +13,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useLanguage } from "@/components/language-provider"
 import { useAppData, type ClothingItem } from "@/components/app-data-provider"
+import { motion } from "framer-motion"
 
 export default function WardrobeClient() {
   const { t } = useLanguage()
-  const { clothingItems, addClothingItem, updateClothingItem, deleteClothingItem } = useAppData()
+  const { clothingItems, addClothingItem, updateClothingItem, deleteClothingItem, detectDominantColor, userProfile } =
+    useAppData()
+
   const [isAddItemOpen, setIsAddItemOpen] = useState(false)
   const [isViewItemOpen, setIsViewItemOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -27,8 +30,34 @@ export default function WardrobeClient() {
     color: "",
     brand: "",
     size: "",
+    style: "casual",
     images: [],
   })
+  const [isDetectingColor, setIsDetectingColor] = useState(false)
+
+  // Color swatches
+  const colorSwatches = [
+    { name: "Black", value: "#000000" },
+    { name: "White", value: "#ffffff" },
+    { name: "Gray", value: "#808080" },
+    { name: "Navy", value: "#000080" },
+    { name: "Blue", value: "#0000ff" },
+    { name: "Red", value: "#ff0000" },
+    { name: "Green", value: "#008000" },
+    { name: "Yellow", value: "#ffff00" },
+    { name: "Purple", value: "#800080" },
+    { name: "Pink", value: "#ffc0cb" },
+    { name: "Brown", value: "#a52a2a" },
+    { name: "Beige", value: "#f5f5dc" },
+  ]
+
+  // Style options
+  const styleOptions = [
+    { value: "casual", label: t("wardrobe.styleCasual") },
+    { value: "sport", label: t("wardrobe.styleSport") },
+    { value: "business", label: t("wardrobe.styleBusiness") },
+    { value: "formal", label: t("wardrobe.styleFormal") },
+  ]
 
   // Filter items based on search query
   const filteredItems = clothingItems.filter(
@@ -36,7 +65,8 @@ export default function WardrobeClient() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.color.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase()),
+      item.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.style && item.style.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
   const handleAddItem = () => {
@@ -47,6 +77,7 @@ export default function WardrobeClient() {
       color: "",
       brand: "",
       size: "",
+      style: "casual",
       images: [],
     })
     setIsAddItemOpen(false)
@@ -65,14 +96,14 @@ export default function WardrobeClient() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isNewItem: boolean) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isNewItem: boolean) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     // In a real app, this would upload to a server
     // For now, we'll use a data URL
     const reader = new FileReader()
-    reader.onload = () => {
+    reader.onload = async () => {
       const imageUrl = reader.result as string
 
       if (isNewItem) {
@@ -80,6 +111,22 @@ export default function WardrobeClient() {
           ...prev,
           images: [...prev.images, imageUrl],
         }))
+
+        // Auto-detect color if no color is set yet
+        if (!newItem.color && isNewItem) {
+          setIsDetectingColor(true)
+          try {
+            const detectedColor = await detectDominantColor(imageUrl)
+            setNewItem((prev) => ({
+              ...prev,
+              color: detectedColor,
+            }))
+          } catch (error) {
+            console.error("Error detecting color:", error)
+          } finally {
+            setIsDetectingColor(false)
+          }
+        }
       } else if (selectedItem) {
         const updatedItem = {
           ...selectedItem,
@@ -95,8 +142,53 @@ export default function WardrobeClient() {
     e.target.value = ""
   }
 
+  const handleDetectColor = async (imageUrl: string, isNewItem: boolean) => {
+    setIsDetectingColor(true)
+    try {
+      const detectedColor = await detectDominantColor(imageUrl)
+
+      if (isNewItem) {
+        setNewItem((prev) => ({
+          ...prev,
+          color: detectedColor,
+        }))
+      } else if (selectedItem) {
+        updateClothingItem(selectedItem.id, { color: detectedColor })
+        setSelectedItem((prev) => (prev ? { ...prev, color: detectedColor } : null))
+      }
+    } catch (error) {
+      console.error("Error detecting color:", error)
+    } finally {
+      setIsDetectingColor(false)
+    }
+  }
+
+  // If user is not logged in, show login prompt
+  if (!userProfile.isLoggedIn) {
+    return (
+      <div className="container p-4 flex flex-col items-center justify-center min-h-[80vh]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center space-y-6 max-w-md"
+        >
+          <div className="w-20 h-20 rounded-full bg-gray-100 mx-auto flex items-center justify-center">
+            <span className="text-2xl font-bold text-gray-400">?</span>
+          </div>
+
+          <h1 className="text-2xl font-bold">{t("account.notLoggedIn")}</h1>
+
+          <Button size="lg" className="w-full" onClick={() => (window.location.href = "/account")}>
+            {t("account.login")}
+          </Button>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container p-4">
+    <div className="container p-4 pb-20">
       <h1 className="text-2xl font-bold mb-6">{t("wardrobe.title")}</h1>
 
       {/* Search and add */}
@@ -150,7 +242,14 @@ export default function WardrobeClient() {
                 <h3 className="font-medium truncate">{item.name}</h3>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-sm text-gray-500 truncate">{item.brand}</p>
-                  <Badge variant="outline">{item.type}</Badge>
+                  <div className="flex items-center space-x-1">
+                    {item.style && (
+                      <Badge variant="outline" className="mr-1">
+                        {item.style}
+                      </Badge>
+                    )}
+                    <Badge variant="outline">{item.type}</Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -158,6 +257,13 @@ export default function WardrobeClient() {
         </div>
       ) : (
         <div className="text-center py-12">
+          <div className="mx-auto w-40 h-40 mb-6">
+            <img
+              src="/placeholder.svg?height=160&width=160"
+              alt="Empty wardrobe"
+              className="w-full h-full object-contain opacity-50"
+            />
+          </div>
           <p className="text-gray-500 mb-4">{t("wardrobe.noItems")}</p>
           <Button onClick={() => setIsAddItemOpen(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
@@ -174,6 +280,27 @@ export default function WardrobeClient() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Image upload first */}
+            <div>
+              <Label>{t("item.images")}</Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {newItem.images.map((image, index) => (
+                  <div key={index} className="aspect-square bg-gray-100 rounded-md overflow-hidden">
+                    <img
+                      src={image || "/placeholder.svg"}
+                      alt={`${newItem.name} ${index}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+                <label className="aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, true)} />
+                  <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-500">{t("wardrobe.uploadImage")}</span>
+                </label>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="name">{t("item.name")}</Label>
               <Input
@@ -199,12 +326,58 @@ export default function WardrobeClient() {
             </div>
 
             <div>
-              <Label htmlFor="color">{t("item.color")}</Label>
-              <Input
-                id="color"
-                value={newItem.color}
-                onChange={(e) => setNewItem({ ...newItem, color: e.target.value })}
-              />
+              <Label htmlFor="style">{t("wardrobe.style")}</Label>
+              <Select value={newItem.style} onValueChange={(value) => setNewItem({ ...newItem, style: value })}>
+                <SelectTrigger id="style">
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {styleOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="color">{t("item.color")}</Label>
+                {newItem.images.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDetectColor(newItem.images[0], true)}
+                    disabled={isDetectingColor}
+                  >
+                    {isDetectingColor ? (
+                      <span className="text-xs">Detecting...</span>
+                    ) : (
+                      <>
+                        <Wand2 className="h-3 w-3 mr-1" />
+                        <span className="text-xs">{t("wardrobe.detectColor")}</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-6 gap-2 mt-2">
+                {colorSwatches.map((color) => (
+                  <div
+                    key={color.name}
+                    className={`aspect-square rounded-md cursor-pointer transition-all ${
+                      newItem.color === color.name ? "ring-2 ring-gray-900 scale-110" : ""
+                    }`}
+                    style={{
+                      backgroundColor: color.value,
+                      border: color.name === "White" ? "1px solid #e5e7eb" : "none",
+                    }}
+                    onClick={() => setNewItem({ ...newItem, color: color.name })}
+                    title={color.name}
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
@@ -223,25 +396,6 @@ export default function WardrobeClient() {
                 value={newItem.size || ""}
                 onChange={(e) => setNewItem({ ...newItem, size: e.target.value })}
               />
-            </div>
-
-            <div>
-              <Label>{t("item.images")}</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {newItem.images.map((image, index) => (
-                  <div key={index} className="aspect-square bg-gray-100 rounded-md overflow-hidden">
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`${newItem.name} ${index}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-                <label className="aspect-square bg-gray-100 rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, true)} />
-                  <PlusCircle className="h-6 w-6 text-gray-400" />
-                </label>
-              </div>
             </div>
           </div>
 
@@ -275,14 +429,15 @@ export default function WardrobeClient() {
                     />
                   </div>
                 ))}
-                <label className="aspect-square bg-gray-100 rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
+                <label className="aspect-square bg-gray-100 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={(e) => handleImageUpload(e, false)}
                   />
-                  <PlusCircle className="h-6 w-6 text-gray-400" />
+                  <Upload className="h-6 w-6 text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-500">{t("wardrobe.uploadImage")}</span>
                 </label>
               </div>
 
@@ -292,7 +447,26 @@ export default function WardrobeClient() {
                   <p className="text-sm">{selectedItem.type}</p>
                 </div>
                 <div>
-                  <Label>{t("item.color")}</Label>
+                  <div className="flex justify-between items-center">
+                    <Label>{t("item.color")}</Label>
+                    {selectedItem.images.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDetectColor(selectedItem.images[0], false)}
+                        disabled={isDetectingColor}
+                      >
+                        {isDetectingColor ? (
+                          <span className="text-xs">Detecting...</span>
+                        ) : (
+                          <>
+                            <Wand2 className="h-3 w-3 mr-1" />
+                            <span className="text-xs">{t("wardrobe.detectColor")}</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex items-center mt-1">
                     <div
                       className="w-3 h-3 rounded-full mr-2"
@@ -311,6 +485,10 @@ export default function WardrobeClient() {
                 <div>
                   <Label>{t("item.size")}</Label>
                   <p className="text-sm">{selectedItem.size || "-"}</p>
+                </div>
+                <div>
+                  <Label>{t("wardrobe.style")}</Label>
+                  <p className="text-sm">{selectedItem.style || "-"}</p>
                 </div>
               </div>
             </div>

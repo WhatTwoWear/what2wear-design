@@ -35,12 +35,19 @@ export function AppHeader() {
             size="icon"
             onClick={toggleLanguage}
             aria-label={language === "en" ? "Switch to German" : "Switch to English"}
+            className="flex items-center"
           >
-            <Globe className="h-5 w-5" />
-            <span className="ml-1 text-xs font-medium">{language === "en" ? "ENG" : "DE"}</span>
+            <Globe className="h-5 w-5 mr-1" />
+            <span className="text-xs font-medium">{language === "en" ? "ENG" : "DE"}</span>
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={() => router.push("/account")} aria-label="Account">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/account")}
+            aria-label="Account"
+            className="relative"
+          >
             <User className="h-5 w-5" />
           </Button>
         </div>

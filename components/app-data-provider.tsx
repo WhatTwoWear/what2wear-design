@@ -11,6 +11,7 @@ export interface ClothingItem {
   color: string
   brand: string
   size?: string
+  style?: string
   images: string[]
 }
 
@@ -35,10 +36,13 @@ export interface Event {
 
 export interface UserProfile {
   name: string
+  email?: string
   profilePicture?: string
   outfitsCreated: number
   wardrobeItems: number
   topOutfits: Outfit[]
+  mostUsedColor?: string
+  isLoggedIn: boolean
 }
 
 interface AppDataContextType {
@@ -75,6 +79,27 @@ interface AppDataContextType {
   setIsLoading: (loading: boolean) => void
   showOnboarding: boolean
   completeOnboarding: () => void
+
+  // User Authentication
+  login: (email: string, password: string) => Promise<boolean>
+  logout: () => void
+  sendMagicLink: (email: string) => Promise<boolean>
+
+  // First Visit
+  isFirstVisit: boolean
+  completeFirstVisit: () => void
+
+  // Outfit Management
+  renameOutfit: (id: string, newName: string) => void
+
+  // Color Detection
+  detectDominantColor: (imageUrl: string) => Promise<string>
+
+  // User Profile
+  updateUsername: (name: string) => void
+
+  // Event Management
+  getEventTypeEmoji: (type: string) => string
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined)
@@ -90,11 +115,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(true)
+  const [isFirstVisit, setIsFirstVisit] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "User",
     outfitsCreated: 0,
     wardrobeItems: 0,
     topOutfits: [],
+    isLoggedIn: false,
   })
 
   // Load data from localStorage on initial render
@@ -111,11 +138,29 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const storedEvents = localStorage.getItem("events")
     if (storedEvents) setEvents(JSON.parse(storedEvents))
 
-    const storedUserProfile = localStorage.getItem("userProfile")
-    if (storedUserProfile) setUserProfile(JSON.parse(storedUserProfile))
-
     const onboardingCompleted = localStorage.getItem("onboardingCompleted")
     if (onboardingCompleted) setShowOnboarding(false)
+
+    const firstVisitCompleted = localStorage.getItem("firstVisitCompleted")
+    if (firstVisitCompleted) setIsFirstVisit(false)
+
+    // Update existing userProfile initialization
+    const storedUserProfile = localStorage.getItem("userProfile")
+    if (storedUserProfile) {
+      const profile = JSON.parse(storedUserProfile)
+      setUserProfile({
+        ...profile,
+        isLoggedIn: localStorage.getItem("userSession") ? true : false,
+      })
+    } else {
+      setUserProfile({
+        name: "User",
+        outfitsCreated: 0,
+        wardrobeItems: 0,
+        topOutfits: [],
+        isLoggedIn: false,
+      })
+    }
   }, [])
 
   // Save data to localStorage whenever it changes
@@ -309,6 +354,140 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("onboardingCompleted", "true")
   }
 
+  const login = async (email: string, password: string) => {
+    // Mock implementation
+    setIsLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsLoading(false)
+
+    // In a real app, this would validate credentials with a backend
+    localStorage.setItem("userSession", JSON.stringify({ email, timestamp: Date.now() }))
+
+    setUserProfile((prev) => ({
+      ...prev,
+      email,
+      isLoggedIn: true,
+    }))
+
+    return true
+  }
+
+  const logout = () => {
+    localStorage.removeItem("userSession")
+    setUserProfile((prev) => ({
+      ...prev,
+      isLoggedIn: false,
+    }))
+
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    })
+  }
+
+  const sendMagicLink = async (email: string) => {
+    // Mock implementation
+    setIsLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsLoading(false)
+
+    toast({
+      title: "Magic link sent",
+      description: `A login link has been sent to ${email}.`,
+    })
+
+    return true
+  }
+
+  const completeFirstVisit = () => {
+    setIsFirstVisit(false)
+    localStorage.setItem("firstVisitCompleted", "true")
+  }
+
+  const renameOutfit = (id: string, newName: string) => {
+    // Update in outfits
+    setOutfits((prev) => prev.map((outfit) => (outfit.id === id ? { ...outfit, name: newName } : outfit)))
+
+    // Update in liked outfits
+    setLikedOutfits((prev) => prev.map((outfit) => (outfit.id === id ? { ...outfit, name: newName } : outfit)))
+
+    // Update in top outfits if present
+    setUserProfile((prev) => ({
+      ...prev,
+      topOutfits: prev.topOutfits.map((outfit) => (outfit.id === id ? { ...outfit, name: newName } : outfit)),
+    }))
+
+    toast({
+      title: "Outfit renamed",
+      description: "Your outfit has been renamed successfully.",
+    })
+  }
+
+  const detectDominantColor = async (imageUrl: string): Promise<string> => {
+    // Mock implementation - in a real app this would analyze the image
+    setIsLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsLoading(false)
+
+    // Return a random color from this list
+    const colors = ["Black", "Navy", "Gray", "White", "Beige", "Red", "Blue", "Green"]
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
+
+  const updateUsername = (name: string) => {
+    setUserProfile((prev) => ({
+      ...prev,
+      name,
+    }))
+
+    toast({
+      title: "Username updated",
+      description: "Your username has been updated successfully.",
+    })
+  }
+
+  const getEventTypeEmoji = (type: string): string => {
+    const typeMap: Record<string, string> = {
+      party: "🎉",
+      sport: "🏃",
+      business: "💼",
+      travel: "✈️",
+      casual: "👕",
+      formal: "👔",
+      date: "❤️",
+      wedding: "💍",
+      default: "📍",
+    }
+
+    return typeMap[type.toLowerCase()] || typeMap.default
+  }
+
+  useEffect(() => {
+    if (clothingItems.length > 0) {
+      const colorCounts: Record<string, number> = {}
+
+      clothingItems.forEach((item) => {
+        const color = item.color.toLowerCase()
+        colorCounts[color] = (colorCounts[color] || 0) + 1
+      })
+
+      let mostUsedColor = ""
+      let maxCount = 0
+
+      Object.entries(colorCounts).forEach(([color, count]) => {
+        if (count > maxCount) {
+          mostUsedColor = color
+          maxCount = count
+        }
+      })
+
+      setUserProfile((prev) => ({
+        ...prev,
+        mostUsedColor: mostUsedColor.charAt(0).toUpperCase() + mostUsedColor.slice(1),
+      }))
+    }
+  }, [clothingItems])
+
   const value = {
     clothingItems,
     addClothingItem,
@@ -338,6 +517,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setIsLoading,
     showOnboarding,
     completeOnboarding,
+    login,
+    logout,
+    sendMagicLink,
+    isFirstVisit,
+    completeFirstVisit,
+    renameOutfit,
+    detectDominantColor,
+    updateUsername,
+    getEventTypeEmoji,
   }
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

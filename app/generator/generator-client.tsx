@@ -5,17 +5,22 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useLanguage } from "@/components/language-provider"
 import { useAppData } from "@/components/app-data-provider"
 import { OutfitResult } from "@/components/outfit-result"
 import { LoadingScreen } from "@/components/loading-screen"
-import { X } from "lucide-react"
+import { X, Heart } from "lucide-react"
+import { motion } from "framer-motion"
 
 export default function GeneratorClient() {
   const { t } = useLanguage()
-  const { generateOutfit, currentOutfit, setCurrentOutfit, isLoading, setIsLoading } = useAppData()
+  const { generateOutfit, currentOutfit, setCurrentOutfit, isLoading, setIsLoading, likeOutfit, renameOutfit } =
+    useAppData()
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([])
+  const [isNamingOutfit, setIsNamingOutfit] = useState(false)
+  const [outfitName, setOutfitName] = useState("")
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom of chat when messages change
@@ -37,6 +42,9 @@ export default function GeneratorClient() {
     const userPrompt = prompt
     setPrompt("")
 
+    // Add thinking message
+    setMessages((prev) => [...prev, { role: "assistant", content: t("generator.thinking") }])
+
     // Show loading
     setIsLoading(true)
 
@@ -44,23 +52,27 @@ export default function GeneratorClient() {
       // Generate outfit
       const outfit = await generateOutfit(userPrompt)
 
-      // Add assistant message
-      setMessages((prev) => [
-        ...prev,
-        {
+      // Replace thinking message with assistant message
+      setMessages((prev) => {
+        const newMessages = [...prev]
+        newMessages.pop() // Remove thinking message
+        newMessages.push({
           role: "assistant",
-          content: `I've created an outfit based on your request: "${userPrompt}". It includes a ${outfit.top.color} ${outfit.top.name} from ${outfit.top.brand}, ${outfit.bottom.color} ${outfit.bottom.name} from ${outfit.bottom.brand}, and ${outfit.shoes.color} ${outfit.shoes.name} from ${outfit.shoes.brand}.`,
-        },
-      ])
+          content: `${t("generator.suggestion")} ${outfit.top.color} ${outfit.top.name}, ${outfit.bottom.color} ${outfit.bottom.name}, and ${outfit.shoes.color} ${outfit.shoes.name}.`,
+        })
+        return newMessages
+      })
     } catch (error) {
       console.error("Error generating outfit:", error)
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((prev) => {
+        const newMessages = [...prev]
+        newMessages.pop() // Remove thinking message
+        newMessages.push({
           role: "assistant",
           content: "Sorry, I couldn't generate an outfit. Please try again.",
-        },
-      ])
+        })
+        return newMessages
+      })
       setIsLoading(false)
     }
   }
@@ -70,9 +82,62 @@ export default function GeneratorClient() {
     setIsLoading(false)
   }
 
+  const handleLike = () => {
+    if (currentOutfit) {
+      setOutfitName(currentOutfit.name)
+      setIsNamingOutfit(true)
+    }
+  }
+
+  const handleSaveOutfit = () => {
+    if (currentOutfit && outfitName.trim()) {
+      // First rename the outfit
+      renameOutfit(currentOutfit.id, outfitName)
+
+      // Then like it
+      const renamedOutfit = { ...currentOutfit, name: outfitName }
+      likeOutfit(renamedOutfit)
+
+      setIsNamingOutfit(false)
+      setCurrentOutfit(null)
+    }
+  }
+
   // If an outfit is being displayed, show the outfit result
   if (currentOutfit) {
-    return <OutfitResult outfit={currentOutfit} />
+    return (
+      <>
+        <OutfitResult outfit={currentOutfit} onLike={handleLike} />
+
+        {/* Name outfit dialog */}
+        <Dialog open={isNamingOutfit} onOpenChange={setIsNamingOutfit}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("generator.nameOutfit")}</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <Input
+                value={outfitName}
+                onChange={(e) => setOutfitName(e.target.value)}
+                placeholder="My perfect outfit"
+                autoFocus
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsNamingOutfit(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button onClick={handleSaveOutfit} disabled={!outfitName.trim()}>
+                <Heart className="h-4 w-4 mr-2" />
+                {t("generator.saveOutfit")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
   }
 
   return (
@@ -85,10 +150,25 @@ export default function GeneratorClient() {
 
           {/* Chat messages */}
           <div className="space-y-4 mb-4">
-            {messages.length === 0 && <p className="text-gray-500 text-center py-8">{t("generator.prompt")}</p>}
+            {messages.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-center py-8"
+              >
+                <p className="text-gray-500">{t("generator.prompt")}</p>
+              </motion.div>
+            )}
 
             {messages.map((message, index) => (
-              <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+              <motion.div
+                key={index}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <div
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     message.role === "user" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
@@ -96,7 +176,7 @@ export default function GeneratorClient() {
                 >
                   {message.content}
                 </div>
-              </div>
+              </motion.div>
             ))}
             <div ref={chatEndRef} />
           </div>

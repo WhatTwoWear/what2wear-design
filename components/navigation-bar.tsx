@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { ShoppingBag, Wand2, Calendar, Heart } from "lucide-react"
+import { Calendar, ShoppingBag, Wand2, Heart, User } from "lucide-react"
 import { useLanguage } from "./language-provider"
 
 export function NavigationBar() {
@@ -11,14 +11,14 @@ export function NavigationBar() {
 
   const navItems = [
     {
-      name: t("nav.wardrobe"),
-      icon: ShoppingBag,
-      path: "/wardrobe",
-    },
-    {
       name: t("nav.calendar"),
       icon: Calendar,
       path: "/calendar",
+    },
+    {
+      name: t("nav.wardrobe"),
+      icon: ShoppingBag,
+      path: "/wardrobe",
     },
     {
       name: t("nav.generator"),
@@ -30,6 +30,11 @@ export function NavigationBar() {
       name: t("nav.likes"),
       icon: Heart,
       path: "/likes",
+    },
+    {
+      name: t("nav.account"),
+      icon: User,
+      path: "/account",
     },
   ]
 
@@ -44,10 +49,15 @@ export function NavigationBar() {
               key={item.path}
               className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
                 isActive ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
-              } ${item.highlight ? "scale-110" : ""}`}
+              }`}
               onClick={() => router.push(item.path)}
             >
-              <item.icon className={`h-6 w-6 ${isActive ? "text-gray-900" : "text-gray-500"}`} />
+              <div className={`relative ${item.highlight ? "bg-gray-100 p-2 rounded-full" : ""}`}>
+                <item.icon className={`h-6 w-6 ${isActive ? "text-gray-900" : "text-gray-500"}`} />
+                {item.highlight && isActive && (
+                  <span className="absolute inset-0 animate-ping rounded-full bg-gray-200 opacity-75"></span>
+                )}
+              </div>
               <span className="text-xs mt-1">{item.name}</span>
             </button>
           )

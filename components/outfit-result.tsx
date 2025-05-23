@@ -11,11 +11,14 @@ import { HumanFigure3D } from "./human-figure-3d"
 import { ItemCarousel } from "./item-carousel"
 import { useAppData, type Outfit } from "./app-data-provider"
 
+// Add onLike prop to the interface
 interface OutfitResultProps {
   outfit: Outfit
+  onLike?: () => void
 }
 
-export function OutfitResult({ outfit }: OutfitResultProps) {
+// Update the component to use the onLike prop
+export function OutfitResult({ outfit, onLike }: OutfitResultProps) {
   const router = useRouter()
   const { t } = useLanguage()
   const { likeOutfit } = useAppData()
@@ -26,7 +29,11 @@ export function OutfitResult({ outfit }: OutfitResultProps) {
   }
 
   const handleLike = () => {
-    likeOutfit(outfit)
+    if (onLike) {
+      onLike()
+    } else {
+      likeOutfit(outfit)
+    }
   }
 
   const handleAssign = () => {
