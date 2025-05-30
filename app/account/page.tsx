@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Login from "@/components/Login";
-import { supabase } from "@/lib/supabaseClient";
+import Login from "../../components/Login";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function Account() {
   const [user, setUser] = useState<any>(null);
