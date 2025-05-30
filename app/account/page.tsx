@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Login from "../../components/Login";
+import Login from "../../components/Login"; // korrekt auf Dateistruktur bezogen
 import { supabase } from "../../lib/supabaseClient";
 
 export default function Account() {
