@@ -41,3 +41,24 @@ export default function RootLayout({
     </html>
   )
 }
+import './globals.css';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import SupabaseProvider from './supabase-provider'; // musst du selbst anlegen
+
+export default async function RootLayout({ children }) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return (
+    <html lang="de">
+      <body>
+        <SupabaseProvider session={session}>
+          {children}
+        </SupabaseProvider>
+      </body>
+    </html>
+  );
+}
