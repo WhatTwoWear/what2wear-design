@@ -69,8 +69,9 @@
     "@types/react-dom": "^19",
     "postcss": "^8",
     "tailwindcss": "^3.4.17"
+  },
   "devDependencies": {
     "typescript": "^5.4.0"
   }
-  }
+
 }
